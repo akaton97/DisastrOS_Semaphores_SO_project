@@ -11,6 +11,7 @@ void internal_semOpen(){
 	//argomenti della syscall per gestire il semaforo
 	int semid = running -> syscall_args[0];
 	int counter = running -> syscall_args[1];
+	int ret;
 	
 	//verifico se il semaforo esiste giò
 	Semaphore* aux = SemaphoreList_byId(&semaphore_list,semid);
@@ -19,7 +20,11 @@ void internal_semOpen(){
 		//alloco il semaforo
 		Semaphore* sem = Semaphore_alloc(semid,counter);
 		//inserisco
-		List_insert(&semaphore_list,semaphores_list.last,sem);
+		ret = List_insert(&semaphore_list,semaphores_list.last,sem);
+		if(ret==NULL){
+			printf("errore nell'inserimento del sem");
+			return;
+		}
 	}
 	
 	//in ogni caso ora devo allocare il descrittore
@@ -28,5 +33,9 @@ void internal_semOpen(){
 	SemDescriptorPtr* sdsptr = SemDescriptorPtr_alloc(sds);
 	
 	//aggiorno la lista di puntatori ai descrittori dei semafori
-	List_insert(running -> sem_descriptor, sem_descriptor.last, sdsptr);
+	ret = List_insert(running -> sem_descriptor, sem_descriptor.last, sdsptr);
+	if(ret==NULL){
+		printf("errore nell'aggiornamento della lista puntatori");
+		return;
+	}
 }
