@@ -13,14 +13,26 @@ void internal_semOpen(){
 	int counter = running -> syscall_args[1];
 	int ret;
 	
+	if(semid < 0){
+		printf("Errore, semid negativo");
+		return;
+	}
+	
 	//verifico se il semaforo esiste giò
 	Semaphore* aux = SemaphoreList_byId(&semaphore_list,semid);
 	
 	if(aux==NULL){
+		
 		//alloco il semaforo
-		Semaphore* sem = Semaphore_alloc(semid,counter);
+		Semaphore* aux = Semaphore_alloc(semid,counter);
+		
+		if(!aux){
+			printf("errore allocazione semaforo");
+			return;
+		}
+		
 		//inserisco
-		ret = List_insert(&semaphore_list,semaphores_list.last,sem);
+		ret = List_insert(&semaphore_list,semaphores_list.last,(ListItem*)aux);
 		if(ret==NULL){
 			printf("errore nell'inserimento del sem");
 			return;
@@ -28,14 +40,38 @@ void internal_semOpen(){
 	}
 	
 	//in ogni caso ora devo allocare il descrittore
-	SemDescriptor* sds = SemDescriptor_alloc(running -> last_sem_fd,sem,running);
+	SemDescriptor* sds = SemDescriptor_alloc(running -> last_sem_fd,aux,running);
 	
+	if(!sds){
+		printf("errore allocazione descrittore");
+		return;
+	}
+	
+	//allocazione puntatore descrittore
 	SemDescriptorPtr* sdsptr = SemDescriptorPtr_alloc(sds);
+	
+	if(!sdsptr){
+		printf("errore allocazione puntatore a descrittore");
+		return;
+	}
 	
 	//aggiorno la lista di puntatori ai descrittori dei semafori
 	ret = List_insert(running -> sem_descriptor, sem_descriptor.last, sdsptr);
-	if(ret==NULL){
+	
+	if(!ret){
 		printf("errore nell'aggiornamento della lista puntatori");
 		return;
 	}
+	
+	sds -> ptr = sdsptr; //descrittore nella struct del descrittore
+
+	//aggiunta ptr del descrittore del sem alla lista dei descrittori
+	SemdescriptorPtr* auxPtr = (SemdescriptorPtr*)List_insert(&aux -> descriptors, aux -> deescriptors.last,(ListItem*)(sds -> ptr));
+	if(!auxPtr){
+		printf("errore inserimento puntatore");
+		return;
+	}
+	
+	//incremento puntatore al pcb dei semafori aperti
+	(running -> last_sem_fd)++;
 }
