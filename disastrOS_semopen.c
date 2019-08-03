@@ -5,12 +5,13 @@
 #include "disastrOS_syscalls.h"
 #include "disastrOS_semaphore.h"
 #include "disastrOS_semdescriptor.h"
+#include "disastrOS_globals.h"
 
 void internal_semOpen(){
 	
 	//argomenti della syscall per gestire il semaforo
-	int semid = running -> syscall_args[0];
-	int counter = running -> syscall_args[1];
+	int semid = running->syscall_args[0];
+	int counter = running->syscall_args[1];
 	int ret;
 	
 	if(semid < 0){
@@ -19,7 +20,7 @@ void internal_semOpen(){
 	}
 	
 	//verifico se il semaforo esiste giò
-	Semaphore* aux = SemaphoreList_byId(&semaphore_list,semid);
+	Semaphore* aux = SemaphoreList_byId(&semaphores_list,semid);
 	
 	if(aux==NULL){
 		
@@ -32,7 +33,7 @@ void internal_semOpen(){
 		}
 		
 		//inserisco
-		ret = List_insert(&semaphore_list,semaphores_list.last,(ListItem*)aux);
+		ret = List_insert(&semaphores_list,semaphores_list.last,(ListItem*)aux);
 		if(ret==NULL){
 			printf("errore nell'inserimento del sem");
 			return;
@@ -56,9 +57,9 @@ void internal_semOpen(){
 	}
 	
 	//aggiorno la lista di puntatori ai descrittori dei semafori
-	ret = List_insert(running -> sem_descriptor, sem_descriptor.last, sdsptr);
+	SemDescriptor* reta =(SemDescriptor*) List_insert(&running -> sem_descriptors,running -> sem_descriptors.last, (ListItem*) sdsptr);
 	
-	if(!ret){
+	if(!reta){
 		printf("errore nell'aggiornamento della lista puntatori");
 		return;
 	}
@@ -66,7 +67,7 @@ void internal_semOpen(){
 	sds -> ptr = sdsptr; //descrittore nella struct del descrittore
 
 	//aggiunta ptr del descrittore del sem alla lista dei descrittori
-	SemdescriptorPtr* auxPtr = (SemdescriptorPtr*)List_insert(&aux -> descriptors, aux -> deescriptors.last,(ListItem*)(sds -> ptr));
+	SemDescriptorPtr* auxPtr = (SemDescriptorPtr*) List_insert(&aux -> descriptors, aux -> descriptors.last,(ListItem*)(sds -> ptr));
 	if(!auxPtr){
 		printf("errore inserimento puntatore");
 		return;
