@@ -12,18 +12,18 @@ void internal_semPost(){
     //estraggo il descrittore del semaforo con quell'id dalla lista nel PCB
     SemDescriptor* sem_desc = SemDescriptorList_byFd(&running->sem_descriptors, id);
     //effettuo un controllo sul descrittore per verificare se l'ho effettivamente trovato
-    if(sem_desc==0){ 
+    if(sem_desc==0){
         printf("[SEMAFORI] SEMPOST FALLITA - il semaforo (id)%d\n non esiste!", id);
 	//impongo, come valore di ritorno, l'errore standard per i semafori di disastrOS
-        running->syscall_retvalue = DSOS_ESEMPOST; 
+        running->syscall_retvalue = DSOS_ESEMPOST;
         return;
     }
-    
+
     Semaphore* sem = sem_desc->semaphore; //prendo il semaforo associato al descrittore
     sem->count++; //incremento contatore di semafori
     if(sem->count <= 0){
 		//estraggo il primo descrittore del semaforo dalla lista dei descrittori in attesa
-		SemDescriptorPtr* d_ptr_aux = (SemDescriptorPtr*) List_detach(&sem->waiting_descriptors, (ListItem*) sem->waiting_descriptors.first); 
+		SemDescriptorPtr* d_ptr_aux = (SemDescriptorPtr*) List_detach(&sem->waiting_descriptors, (ListItem*) sem->waiting_descriptors.first);
 		if(!ptr_aux){
 			printf("[SEMAFORI] errore nella rimozione del descrittore dalla lista di waiting del semaforo\n");
 			running->syscall_retvalue = DSOS_ELIST_DETACH;
