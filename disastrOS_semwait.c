@@ -10,15 +10,14 @@ void internal_semWait(){
   //estraggo l'id del semaforo
   int semid = running->syscall_args[0];
   //prendo il descrittore del semaforo assocciato all'id
-  SemDescriptor* semdesc = SemDescriptor_by(&running->sem_descriptors, semid);
+  SemDescriptor* semdesc = SemDescriptorList_byFd(&running->sem_descriptors, semid);
   //controllo se ho trovato il descrittore, altrimento termino
   if(semdesc==0){
     printf("[SEMAFORO] semWait() del semaforo id=%d fallita\n",semid);
-	  running->syscall_retvalue= DSOS_ESEM_DES_LIST;
-	  return;
+	 return;
   }
   //salvo il semaforo per riutilizzarlo
-  Semaphore* sem = s_desc->semaphore;
+  Semaphore* sem = semdesc->semaphore;
   //salvo il puntatore del descrittore
   SemDescriptorPtr* desc_ptr = semdesc->ptr;
   //decremento il contatore del SEMAFORO
@@ -28,7 +27,7 @@ void internal_semWait(){
     //in questo caso, estraggo il descrittore dalla lista dei descrittori
     List_detach(&sem->descriptors,(ListItem*)desc_ptr);
     //lo infilo nella lista di waiting
-    List_insert(&sem->waiting_descriptors, sem->waiting_descriptors.last, (ListItem*) sem_desc->ptr);
+    List_insert(&sem->waiting_descriptors, sem->waiting_descriptors.last, (ListItem*) semdesc->ptr);
     //imposto lo status del programma attuale in waiting
     running->status = Waiting;
     //inserisco il processo in esecuzione dentro la waiting list

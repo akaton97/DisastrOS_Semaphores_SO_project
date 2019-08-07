@@ -9,10 +9,10 @@
 void internal_semClose(){
 	
 	int semid = running -> syscall_args[0];
-	int ret;
+	void* ret;
 	
 	//ricerca descrittore
-	SemDescriptor* sds = SemaphoreList_byId(running -> sem_descriptors, semid);
+	SemDescriptor* sds = SemDescriptorList_byFd(&running->sem_descriptors, semid);
 	
 	if(sds == NULL){
 		printf("descrittore non trovato");
@@ -20,7 +20,7 @@ void internal_semClose(){
 	}
 	
 	//rimozione descrittore
-	ret = List_detach(running -> sem_descriptors, sds);
+	ret = (SemDescriptor*)List_detach(&running->sem_descriptors, (ListItem*)sds);
 	if(ret== NULL){
 		printf("errore nella rimozione del descrittore");
 		return;
@@ -29,7 +29,7 @@ void internal_semClose(){
 	Semaphore* sem = sds->semaphore;
 	
 	//rimozione puntatore
-	ret = List_detach(sem > descriptors, sds -> ptr);
+	ret = List_detach(&sem->descriptors, (ListItem*)sds->ptr);
 	if(ret==NULL){
 		printf("errore nella rimozione del puntatore");
 		return;
