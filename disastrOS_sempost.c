@@ -15,7 +15,8 @@ void internal_semPost(){
     //effettuo un controllo sul descrittore per verificare se l'ho effettivamente trovato
     if(sem_desc==0){
         printf("[SEMAFORI] SEMPOST FALLITA - il semaforo (id)%d\n non esiste!", id);
-	//impongo, come valore di ritorno, l'errore standard per i semafori di disastrOS
+		//impongo, come valore di ritorno, l'errore standard aggiunto per i semafori di disastrOS
+		running->syscall_retvalue = DSOS_ELIST_DETACH;
         return;
     }
     Semaphore* sem = sem_desc->semaphore; //prendo il semaforo associato al descrittore
@@ -25,12 +26,14 @@ void internal_semPost(){
 		SemDescriptorPtr* d_ptr_aux = (SemDescriptorPtr*) List_detach(&sem->waiting_descriptors, (ListItem*) sem->waiting_descriptors.first);
 		if(!d_ptr_aux){
 			printf("[SEMAFORI] errore nella rimozione del descrittore dalla lista di waiting del semaforo\n");
+			running->syscall_retvalue = DSOS_ELIST_DETACH;
 			return;
 		}
 		//inserisco il puntatore al descrittore nella lista dei descrittori del semaforo
 		SemDescriptorPtr* dptr = (SemDescriptorPtr*) List_insert(&sem->descriptors, sem->descriptors.last, (ListItem*) d_ptr_aux);
 		if(!dptr){
 			printf("[SEMAFORI] errore nell'inserimetno del puntatore a descrittore nella lista dei descrittori del semaforo\n");
+			running->syscall_retvalue= DSOS_ELIST_INSERT;
 		}
 		//imposto lo stato del pcb del processo attuale in ready
 		PCB* exPCB = d_ptr_aux->descriptor->pcb;
@@ -39,11 +42,14 @@ void internal_semPost(){
 		PCB* pcbAux = (PCB*)List_detach(&waiting_list, (ListItem*) exPCB);
 		if(pcbAux==NULL){
 				printf("[SEMAFORI] errore nella rimozione del processo dalla waiting list\n");
+				running->syscall_retvalue= DSOS_ELIST_DETACH;
 		}
 		//inserisco il processo attuale nella fila di ready
 		pcbAux = (PCB*)List_insert(&ready_list, ready_list.last, (ListItem*) exPCB);
         if(!pcbAux){
 			printf("[SEMAFORO] errore nell'inserimento del processo nella fila di ready\n");
+			running->syscall_retvalue = DSOS_ELIST_INSERT;
 		}
 	}
+	return;
 }

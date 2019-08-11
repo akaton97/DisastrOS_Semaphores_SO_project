@@ -58,9 +58,9 @@ void internal_semOpen(){
 	}
 	
 	//aggiorno la lista di puntatori ai descrittori dei semafori
-	SemDescriptor* ret =(SemDescriptor*) List_insert(&running -> sem_descriptors,running -> sem_descriptors.last, (ListItem*) sdsptr);
+	SemDescriptor* sem_des =(SemDescriptor*) List_insert(&running -> sem_descriptors,running -> sem_descriptors.last, (ListItem*) sdsptr);
 	
-	if(!ret){
+	if(!sem_des){
 		printf("ERRORE - nell'aggiornamento della lista puntatori");
 		running->syscall_retvalue = DSOS_ELIST_INSERT;
 		return;
@@ -80,7 +80,7 @@ void internal_semOpen(){
 	(running -> last_sem_fd)++;
 
 	//assegno come ret-value della syscall il fd del semaforo
-	running->syscall_retvalue = sfd->fd; 
+	running->syscall_retvalue = sds->fd; 
 	
 	disastrOS_printStatus();
 }
