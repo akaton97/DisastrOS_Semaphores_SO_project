@@ -15,7 +15,8 @@ void internal_semOpen(){
 	void* ret;
 	
 	if(semid < 0){
-		printf("Errore, semid negativo");
+		printf("ERRORE - semid negativo");
+		running->syscall_retvalue = DSOS_EWRONG_ID;
 		return;
 	}
 	
@@ -28,23 +29,22 @@ void internal_semOpen(){
 		Semaphore* aux = Semaphore_alloc(semid,counter);
 		
 		if(!aux){
-			printf("errore allocazione semaforo");
+			printf("ERRORE - allocazione semaforo");
+			running->syscall_retvalue = DSOS_ESEM_ALLOC;
 			return;
 		}
 		
 		//inserisco
-		ret = List_insert(&semaphores_list,semaphores_list.last,(ListItem*)aux);
-		if(ret==NULL){
-			printf("errore nell'inserimento del sem");
-			return;
-		}
+		List_insert(&semaphores_list,semaphores_list.last,(ListItem*)aux);
+
 	}
 	
 	//in ogni caso ora devo allocare il descrittore
 	SemDescriptor* sds = SemDescriptor_alloc(running -> last_sem_fd,aux,running);
 	
 	if(!sds){
-		printf("errore allocazione descrittore");
+		printf("ERRORE - allocazione descrittore");
+		running->syscall_retvalue = DSOS_ESEM_DES_ALLOC;
 		return;
 	}
 	
@@ -52,15 +52,17 @@ void internal_semOpen(){
 	SemDescriptorPtr* sdsptr = SemDescriptorPtr_alloc(sds);
 	
 	if(!sdsptr){
-		printf("errore allocazione puntatore a descrittore");
+		printf("ERRORE - allocazione puntatore a descrittore");
+		running->syscall_retvalue = DSOS_ESEM_DES_PTR_ALLOC;
 		return;
 	}
 	
 	//aggiorno la lista di puntatori ai descrittori dei semafori
-	SemDescriptor* reta =(SemDescriptor*) List_insert(&running -> sem_descriptors,running -> sem_descriptors.last, (ListItem*) sdsptr);
+	SemDescriptor* ret =(SemDescriptor*) List_insert(&running -> sem_descriptors,running -> sem_descriptors.last, (ListItem*) sdsptr);
 	
-	if(!reta){
-		printf("errore nell'aggiornamento della lista puntatori");
+	if(!ret){
+		printf("ERRORE - nell'aggiornamento della lista puntatori");
+		running->syscall_retvalue = DSOS_ELIST_INSERT;
 		return;
 	}
 	
@@ -69,10 +71,16 @@ void internal_semOpen(){
 	//aggiunta ptr del descrittore del sem alla lista dei descrittori
 	SemDescriptorPtr* auxPtr = (SemDescriptorPtr*) List_insert(&aux -> descriptors, aux -> descriptors.last,(ListItem*)(sds -> ptr));
 	if(!auxPtr){
-		printf("errore inserimento puntatore");
+		printf("ERRORE - inserimento puntatore");
+		running->syscall_retvalue = DSOS_ELIST_INSERT;
 		return;
 	}
 	
 	//incremento puntatore al pcb dei semafori aperti
 	(running -> last_sem_fd)++;
+
+	//assegno come ret-value della syscall il fd del semaforo
+	running->syscall_retvalue = sfd->fd; 
+	
+	disastrOS_printStatus();
 }

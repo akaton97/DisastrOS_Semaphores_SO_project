@@ -14,15 +14,17 @@ void internal_semClose(){
 	//ricerca descrittore
 	SemDescriptor* sds = SemDescriptorList_byFd(&running->sem_descriptors, semid);
 	
-	if(sds == NULL){
-		printf("descrittore non trovato");
+	if(!sds){
+		printf("ERRORE - descrittore non trovato");
+		running->syscall_retvalue=DSOS_ESEM_DES_LIST;
 		return;
 	}
 	
 	//rimozione descrittore
 	sds = (SemDescriptor*)List_detach(&running->sem_descriptors, (ListItem*)sds);
-	if(sds== NULL){
-		printf("errore nella rimozione del descrittore");
+	if(!sds){
+		printf("ERRORE - nella rimozione del descrittore");
+		 running->syscall_retvalue = DSOS_ELIST_DETACH;
 		return;
 	}
 	
@@ -32,19 +34,21 @@ void internal_semClose(){
 	//prendo il puntatore dalla lista semafori per chiamare poi la free
 	SemDescriptorPtr* sdptr = (SemDescriptor*)List_detach(&sem->descriptors, (ListItem*)sds->ptr);
 	if(!sdptr){
-		printf("errore nella rimozione del ptr al descrittore dalla lista");
+		printf("ERRORE - nella rimozione del ptr al descrittore dalla lista");
 		return;
 	}
 	
 	ret = SemDescriptorPtr_free(sdptr);
 	if(ret){
-		printf("errore nella free del ptr al descrittore");
+		printf("ERRORE - nella free del ptr al descrittore");
+		running->syscall_retvalue = DSOS_ESEM_DES_PTR_FREE;
 		return;
 	}
 	
 	ret = SemDescriptor_free(sds);
 	if(ret){
-		printf("errore nella free del descrittore");
+		printf("ERRORE - nella free del descrittore");
+		running->syscall_retvalue = DSOS_ESEM_DES_FREE;
 		return;
 	}
 	
@@ -53,12 +57,14 @@ void internal_semClose(){
 		printf("chiusura semaforo");
 		Semaphore* aux = (Semaphore*)List_detach(&semaphores_list,(ListItem*)sem);
 		if(!aux){
-			printf("errore rimozione semaforo");
+			printf("ERRORE - rimozione semaforo");
+			 running->syscall_retvalue = DSOS_ELIST_DETACH;
 			return;
 		}
 		ret = Semaphore_free(sem);
 		if(ret){
-			printf("errore free del semaforo");
+			printf("ERRORE - free del semaforo");
+			running->syscall_retvalue = DSOS_ESEM_FREE;
 			return;
 		}
 		disastrOS_printStatus();
@@ -66,4 +72,5 @@ void internal_semClose(){
 		
 	running->last_sem_fd --;
 	
+	running -> syscall_retvalue = 0;
 }

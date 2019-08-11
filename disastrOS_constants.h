@@ -29,6 +29,18 @@
 #define DSOS_ERESOURCECLOSE -12
 #define DSOS_ERESOURCEINUSE -13
 
+//Nuove variabili per la gestione errore
+#define DSOS_EWRONG_ID -14
+#define DSOS_ESEM_ALLOC -15
+#define DSOS_ESEM_DES_ALLOC -16
+#define DSOS_ESEM_DES_PTR_ALLOC -17
+#define DSOS_ELIST_INSERT -18
+#define DSOS_ESEM_DES_LIST -19
+#define DSOS_ESEM_DES_PTR_FREE -20
+#define DSOS_ESEM_DES_FREE -21
+#define DSOS_ELIST_DETACH -22
+#define DSOS_ESEM_FREE -23
+
 // syscall numbers
 #define DSOS_MAX_SYSCALLS 32
 #define DSOS_MAX_SYSCALLS_ARGS 8
