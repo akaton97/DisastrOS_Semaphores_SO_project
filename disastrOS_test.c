@@ -1,8 +1,16 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <poll.h>
-
 #include "disastrOS.h"
+#include "disastrOS.c"
+//numeri da definire meglio durante i test successivi
+//definisco delle macro per la lunghezza del buffer e le iterazioni da fare su di esso
+#define BUFFER_LENGTH 100
+#define ITERATION 20
+//inizializzo il buffer e gli indici di scrittura e lettura dei semafori
+int Buffer[BUFFER_LENGTH];
+int w_index = 0;
+int r_index = 0;
 
 // we need this to handle the sleep state
 void sleeperFunction(void* args){
@@ -21,11 +29,23 @@ void childFunction(void* args){
   int fd=disastrOS_openResource(disastrOS_getpid(),type,mode);
   printf("fd=%d\n", fd);
   printf("PID: %d, terminating\n", disastrOS_getpid());
+  //creazione e apertura dei semafori
+  printf("[CHILD] creazione ed apertura dei semafori\n");
+  int empty_sem = disastrOS_semOpen(1,0);
+  int fill_sem = disastrOS_semOpen(2,BUFFER_LENGTH);
+  int read_sem = disastrOS_semOpen(3,1);
+  int write_sem = disastrOS_semOpen(4,1);
 
   for (int i=0; i<(disastrOS_getpid()+1); ++i){
     printf("PID: %d, iterate %d\n", disastrOS_getpid(), i);
     disastrOS_sleep((20-disastrOS_getpid())*5);
   }
+  //chiusura semafori e uscita del figlio
+  printf("[CHILD] chiusura semafori\n");
+  disastrOS_semClose(empty_sem); 
+  disastrOS_semClose(full_sem); 
+  disastrOS_semClose(read_sem); 
+  disastrOS_semClose(write_sem); 
   disastrOS_exit(disastrOS_getpid()+1);
 }
 

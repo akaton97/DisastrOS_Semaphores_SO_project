@@ -146,6 +146,10 @@ void disastrOS_start(void (*f)(void*), void* f_args, char* logfile){
   Timer_init();
   Resource_init();
   Descriptor_init();
+  //inizializzo lo spazio strutturale nel sistema per i semafori
+  Semaphore_init(); 
+  //inizializzo lo spazio strutturale nel sistema per i descrittori dei semafori
+  SemDescriptor_init(); 
   init_pcb=0;
 
   // populate the vector of syscalls and number of arguments for each syscall
@@ -303,6 +307,30 @@ int disastrOS_closeResource(int fd) {
 
 int disastrOS_destroyResource(int resource_id) {
   return disastrOS_syscall(DSOS_CALL_DESTROY_RESOURCE, resource_id);
+}
+
+int disastrOS_destroyResource(int resource_id) {
+  return disastrOS_syscall(DSOS_CALL_DESTROY_RESOURCE, resource_id);
+}
+
+//inizializzazione syscall semOpen()
+int disastrOS_semOpen(int id, int count){
+	return disastrOS_syscall(DSOS_CALL_SEMOPEN,id,count);
+}
+
+//inizializzazione syscall semClose()
+int disastrOS_semClose(int fd){
+	return disastrOS_syscall(DSOS_CALL_SEMCLOSE,fd);
+}
+
+//inizializzazione syscall semPost()
+int disastrOS_semPost(int fd){
+	return disastrOS_syscall(DSOS_CALL_SEMPOST,fd);
+}
+
+//inizializzazione syscall semWait()
+int disastrOS_semWait(int fd){
+	return disastrOS_syscall(DSOS_CALL_SEMWAIT,fd);
 }
 
 
