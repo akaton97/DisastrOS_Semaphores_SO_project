@@ -7,10 +7,45 @@
 //definisco delle macro per la lunghezza del buffer e le iterazioni da fare su di esso
 #define BUFFER_LENGTH 100
 #define ITERATION 20
-//inizializzo il buffer e gli indici di scrittura e lettura dei semafori
-int Buffer[BUFFER_LENGTH];
+
+//inizializzo il buffer e gli indici di scrittura e lettura dei semafori più i rispettivi semafori
+int filled_sem, empty_sem , read_sem , write_sem;
+int buffer[BUFFER_LENGTH];
 int w_index = 0;
 int r_index = 0;
+
+// variabile condivisa
+unsigned long int shared_variable;
+
+int consumer(){
+	
+	disastrOS_semWait(filled_sem);
+	disastrOS_semWait(read_sem);
+	
+	int var_cons = buffer[r_index];
+	//evitiamo overflow, rilegendo eventualmente zone di memoria iniziali
+	r_index = (r_index + 1) % BUFFER_LENGTH;
+	
+	disastrOS_semPost(empty_sem);
+	disastrOS_semPost(write_sem);
+	return var_cons;
+}
+
+int producer(){
+	disastrOS_semWait(empty_sem);
+	disastrOS_semWait(write_sem);
+
+	int var_prod = shared_variable;
+	buf[w_index] = shared_variable;
+	//evitiamo overflow, riscrivendo eventualmente zone di memoria iniziali
+	w_index = (w_index + 1) % BUFFER_LENGTH;
+	shared_variable ++;
+	
+	disastrOS_semPost(filled_sem);
+	disastrOS_semPost(read_sem);
+	
+	return var_prod;
+}
 
 // we need this to handle the sleep state
 void sleeperFunction(void* args){
@@ -22,26 +57,30 @@ void sleeperFunction(void* args){
 }
 
 void childFunction(void* args){
-  printf("Hello, I am the child function %d\n",disastrOS_getpid());
-  printf("I will iterate a bit, before terminating\n");
-  int type=0;
-  int mode=0;
-  int fd=disastrOS_openResource(disastrOS_getpid(),type,mode);
-  printf("fd=%d\n", fd);
-  printf("PID: %d, terminating\n", disastrOS_getpid());
-  //creazione e apertura dei semafori
-  printf("[CHILD] creazione ed apertura dei semafori\n");
-  int empty_sem = disastrOS_semOpen(1,0);
-  int fill_sem = disastrOS_semOpen(2,BUFFER_LENGTH);
-  int read_sem = disastrOS_semOpen(3,1);
-  int write_sem = disastrOS_semOpen(4,1);
 
-  for (int i=0; i<(disastrOS_getpid()+1); ++i){
-    printf("PID: %d, iterate %d\n", disastrOS_getpid(), i);
-    disastrOS_sleep((20-disastrOS_getpid())*5);
-  }
+  //creazione e apertura dei semafori
+  printf("Child - creazione ed apertura dei semafori\n");
+  empty_sem = disastrOS_semOpen(1,0);
+  fill_sem = disastrOS_semOpen(2,BUFFER_LENGTH);
+  read_sem = disastrOS_semOpen(3,1);
+  write_sem = disastrOS_semOpen(4,1);
+
+  for (int i=0; i<ITERATION; ++i){
+	
+	if(disastrOS_getpid()%2)==0{
+		in write_val = producer();
+		printf("Child-Info - Thread #%d: valore buffer scritto: %d \n",disastrOS_getpid(),(write_val));
+	}
+	
+	else {
+		int read_val = consumer();
+		printf("Child-Info - Thread #%d: valore buffer letto: %d \n",disastrOS_getpid(),(read_val));
+	}
+	
+   }
+  
   //chiusura semafori e uscita del figlio
-  printf("[CHILD] chiusura semafori\n");
+  printf("Child - chiusura semafori\n");
   disastrOS_semClose(empty_sem); 
   disastrOS_semClose(full_sem); 
   disastrOS_semClose(read_sem); 
@@ -51,20 +90,24 @@ void childFunction(void* args){
 
 
 void initFunction(void* args) {
+	
   disastrOS_printStatus();
-  printf("hello, I am init and I just started\n");
-  disastrOS_spawn(sleeperFunction, 0);
+  printf(" ### Start ###");
+  //disastrOS_spawn(sleeperFunction, 0);
   
+  //stampo lo stato iniziale del buffer ai fini della verifica del test
+  printf(" ---- Stato iniziale Buffer ---- ");
+  for(int buf=0; buf < BUFFER_LENGTH; buf++){
+	  printf("%d",buffer[buf]);
+  }
+  printf("\n");
+  
+  shared_variable = 1; //valore della variabile condivisa
 
   printf("I feel like to spawn 10 nice threads\n");
   int alive_children=0;
+  
   for (int i=0; i<10; ++i) {
-    int type=0;
-    int mode=DSOS_CREATE;
-    printf("mode: %d\n", mode);
-    printf("opening resource (and creating if necessary)\n");
-    int fd=disastrOS_openResource(i,type,mode);
-    printf("fd=%d\n", fd);
     disastrOS_spawn(childFunction, 0);
     alive_children++;
   }
@@ -78,7 +121,15 @@ void initFunction(void* args) {
 	   pid, retval, alive_children);
     --alive_children;
   }
-  printf("shutdown!");
+  
+  //stampo lo stato finale del buffer ai fini della verifica del test con quello iniziale
+  printf(" ---- Stato iniziale Buffer ---- ");
+  for(int buf=0; buf < BUFFER_LENGTH; buf++){
+	  printf("%d",buffer[buf]);
+  }
+  printf("\n");
+  
+  printf(" ### shutdown ###");
   disastrOS_shutdown();
 }
 
