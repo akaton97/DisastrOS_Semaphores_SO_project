@@ -309,10 +309,6 @@ int disastrOS_destroyResource(int resource_id) {
   return disastrOS_syscall(DSOS_CALL_DESTROY_RESOURCE, resource_id);
 }
 
-int disastrOS_destroyResource(int resource_id) {
-  return disastrOS_syscall(DSOS_CALL_DESTROY_RESOURCE, resource_id);
-}
-
 //inizializzazione syscall semOpen()
 int disastrOS_semOpen(int id, int count){
 	return disastrOS_syscall(DSOS_CALL_SEMOPEN,id,count);
@@ -332,8 +328,6 @@ int disastrOS_semPost(int fd){
 int disastrOS_semWait(int fd){
 	return disastrOS_syscall(DSOS_CALL_SEMWAIT,fd);
 }
-
-
 
 void disastrOS_printStatus(){
   printf("****************** DisastrOS ******************\n");
