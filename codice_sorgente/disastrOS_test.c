@@ -36,7 +36,7 @@ int producer(){
 	disastrOS_semWait(write_sem);
 
 	int var_prod = shared_variable;
-	buf[w_index] = shared_variable;
+	buffer[w_index] = shared_variable;
 	//evitiamo overflow, riscrivendo eventualmente zone di memoria iniziali
 	w_index = (w_index + 1) % BUFFER_LENGTH;
 	shared_variable ++;
@@ -60,15 +60,16 @@ void childFunction(void* args){
 
   //creazione e apertura dei semafori
   printf("Child - creazione ed apertura dei semafori\n");
+  
   empty_sem = disastrOS_semOpen(1,0);
-  fill_sem = disastrOS_semOpen(2,BUFFER_LENGTH);
+  filled_sem = disastrOS_semOpen(2,BUFFER_LENGTH);
   read_sem = disastrOS_semOpen(3,1);
   write_sem = disastrOS_semOpen(4,1);
 
   for (int i=0; i<ITERATION; ++i){
 	
-	if(disastrOS_getpid()%2)==0{
-		in write_val = producer();
+	if((disastrOS_getpid()%2)==0){
+		int write_val = producer();
 		printf("Child-Info - Thread #%d: valore buffer scritto: %d \n",disastrOS_getpid(),(write_val));
 	}
 	
@@ -82,7 +83,7 @@ void childFunction(void* args){
   //chiusura semafori e uscita del figlio
   printf("Child - chiusura semafori\n");
   disastrOS_semClose(empty_sem); 
-  disastrOS_semClose(full_sem); 
+  disastrOS_semClose(filled_sem); 
   disastrOS_semClose(read_sem); 
   disastrOS_semClose(write_sem); 
   disastrOS_exit(disastrOS_getpid()+1);
