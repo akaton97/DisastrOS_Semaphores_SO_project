@@ -10,6 +10,7 @@
 void internal_semOpen(){
 	
 	printf("going to open a sem");
+	
 	/*argomenti della syscall per gestire il semaforo
 	 * [0] è l'id del semaforo
 	 * [1] è il counter del semaforo
@@ -29,7 +30,7 @@ void internal_semOpen(){
 	if(aux==NULL){
 		
 		//alloco il semaforo
-		Semaphore* aux = Semaphore_alloc(semid,counter);
+		aux = Semaphore_alloc(semid,counter);
 		
 		if(!aux){
 			printf("ERRORE - allocazione semaforo");

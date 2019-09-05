@@ -3,10 +3,11 @@
 #include <poll.h>
 #include "disastrOS.h"
 #include "disastrOS.c"
+
 //numeri da definire meglio durante i test successivi
 //definisco delle macro per la lunghezza del buffer e le iterazioni da fare su di esso
-#define BUFFER_LENGTH 100
-#define ITERATION 20
+#define BUFFER_LENGTH 50
+#define ITERATION 10
 
 //inizializzo il buffer e gli indici di scrittura e lettura dei semafori più i rispettivi semafori
 int buffer[BUFFER_LENGTH];
@@ -14,7 +15,7 @@ int w_index = 0;
 int r_index = 0;
 
 // variabile condivisa
-unsigned long int shared_variable;
+int shared_variable = 1;
 
 void childFunction(void* args){
 
@@ -22,7 +23,7 @@ void childFunction(void* args){
   printf("I will iterate a bit, before terminating\n");
   int type=0;
   int mode=0;
-  int fd=disastrOS_openResource(disastrOS_getpid(),0,0);
+  int fd = disastrOS_openResource(disastrOS_getpid(),type,mode);
   printf("fd=%d\n",fd);
   printf("PID: %d, terminating\n", disastrOS_getpid());
   
@@ -33,6 +34,8 @@ void childFunction(void* args){
   int filled_sem = disastrOS_semOpen(2,BUFFER_LENGTH);
   int read_sem = disastrOS_semOpen(3,1);
   int write_sem = disastrOS_semOpen(4,1);
+  
+  printf("Child - fine apertura ed apertura dei semafori\n");
 
   for (int i=0; i<ITERATION; ++i){
 	
@@ -105,12 +108,19 @@ void initFunction(void* args) {
   }
   printf("\n");
   
+  int fd[10];
   shared_variable = 1; //valore della variabile condivisa
 
   printf("I feel like to spawn 10 nice threads\n");
   int alive_children=0;
   
   for (int i=0; i<10; ++i) {
+	int type=0;
+    int mode=DSOS_CREATE;
+    printf("mode: %d\n", mode);
+    printf("opening resource (and creating if necessary)\n");
+    fd[i]=disastrOS_openResource(i,type,mode);
+    printf("fd=%d\n", fd[i]);
     disastrOS_spawn(childFunction, 0);
     alive_children++;
   }
