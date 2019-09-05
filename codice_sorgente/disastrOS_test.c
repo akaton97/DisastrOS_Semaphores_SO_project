@@ -99,22 +99,22 @@ void initFunction(void* args) {
 	
   disastrOS_printStatus();
   printf(" ### Start ###");
-  //disastrOS_spawn(sleeperFunction, 0);
-  
+  disastrOS_spawn(sleeperFunction, 0);
+  int fd[10];
   //stampo lo stato iniziale del buffer ai fini della verifica del test
-  printf(" ---- Stato iniziale Buffer ---- ");
+  /*printf(" ---- Stato iniziale Buffer ---- ");
   for(int buf=0; buf < BUFFER_LENGTH; buf++){
 	  printf("%d",buffer[buf]);
   }
   printf("\n");
+  */
   
-  int fd[10];
-  shared_variable = 1; //valore della variabile condivisa
+  //shared_variable = 1; //valore della variabile condivisa
 
   printf("I feel like to spawn 10 nice threads\n");
   int alive_children=0;
   
-  for (int i=0; i<10; ++i) {
+  for (int i=0; i<ITERATION; ++i) {
 	int type=0;
     int mode=DSOS_CREATE;
     printf("mode: %d\n", mode);
@@ -136,12 +136,27 @@ void initFunction(void* args) {
   }
   
   //stampo lo stato finale del buffer ai fini della verifica del test con quello iniziale
-  printf(" ---- Stato iniziale Buffer ---- ");
+  /*printf(" ---- Stato iniziale Buffer ---- ");
   for(int buf=0; buf < BUFFER_LENGTH; buf++){
 	  printf("%d",buffer[buf]);
+  }*/
+  printf("dealloco risorse\n");
+  int i;
+  for (i = 0; i <ITERATION; ++i)
+  {
+	disastrOS_closeResource(fd[i]);
+	disastrOS_destroyResource(i);
+	disastrOS_printStatus();
+  }
+  
+  
+  printf("STATO FINALE DEL SISTEMA:\n");
+  disastrOS_printStatus();
+  printf("BUFFER ALLA FINE\n");
+  for(i=0;i<BUFFER_LENGTH;i++){
+	  printf("%d ", buffer[i]);
   }
   printf("\n");
-  
   printf(" ### shutdown ###");
   disastrOS_shutdown();
 }
