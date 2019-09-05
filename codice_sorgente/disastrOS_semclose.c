@@ -32,7 +32,7 @@ void internal_semClose(){
 	Semaphore* sem = sds->semaphore;
 	
 	//prendo il puntatore dalla lista semafori per chiamare poi la free
-	SemDescriptorPtr* sdptr = (SemDescriptor*)List_detach(&sem->descriptors, (ListItem*)sds->ptr);
+	SemDescriptorPtr* sdptr = (SemDescriptorPtr*)List_detach(&sem->descriptors, (ListItem*)sds->ptr);
 	if(!sdptr){
 		printf("ERRORE - nella rimozione del ptr al descrittore dalla lista");
 		return;

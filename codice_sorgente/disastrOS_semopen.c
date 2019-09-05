@@ -9,10 +9,13 @@
 
 void internal_semOpen(){
 	
-	//argomenti della syscall per gestire il semaforo
+	printf("going to open a sem");
+	/*argomenti della syscall per gestire il semaforo
+	 * [0] è l'id del semaforo
+	 * [1] è il counter del semaforo
+ 	*/ 
 	int semid = running->syscall_args[0];
 	int counter = running->syscall_args[1];
-	void* ret;
 	
 	if(semid < 0){
 		printf("ERRORE - semid negativo");
