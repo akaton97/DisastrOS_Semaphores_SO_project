@@ -15,7 +15,7 @@ int w_index = 0;
 int r_index = 0;
 
 // variabile condivisa
-int shared_variable = 1;
+int shared_variable = 0;
 
 void childFunction(void* args){
 

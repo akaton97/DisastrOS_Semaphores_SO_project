@@ -9,7 +9,7 @@
 
 void internal_semOpen(){
 	
-	printf("going to open a sem");
+	printf("going to open a sem \n");
 	
 	/*argomenti della syscall per gestire il semaforo
 	 * [0] è l'id del semaforo
@@ -19,7 +19,7 @@ void internal_semOpen(){
 	int counter = running->syscall_args[1];
 	
 	if(semid < 0){
-		printf("ERRORE - semid negativo");
+		printf("ERRORE - semid negativo \n");
 		running->syscall_retvalue = DSOS_EWRONG_ID;
 		return;
 	}
@@ -33,7 +33,7 @@ void internal_semOpen(){
 		aux = Semaphore_alloc(semid,counter);
 		
 		if(!aux){
-			printf("ERRORE - allocazione semaforo");
+			printf("ERRORE - allocazione semaforo \n");
 			running->syscall_retvalue = DSOS_ESEM_ALLOC;
 			return;
 		}
@@ -47,7 +47,7 @@ void internal_semOpen(){
 	SemDescriptor* sds = SemDescriptor_alloc(running -> last_sem_fd,aux,running);
 	
 	if(!sds){
-		printf("ERRORE - allocazione descrittore");
+		printf("ERRORE - allocazione descrittore \n");
 		running->syscall_retvalue = DSOS_ESEM_DES_ALLOC;
 		return;
 	}
@@ -61,11 +61,11 @@ void internal_semOpen(){
 		return;
 	}
 	
-	//aggiorno la lista di puntatori ai descrittori dei semafori
-	SemDescriptor* sem_des =(SemDescriptor*) List_insert(&running -> sem_descriptors,running -> sem_descriptors.last, (ListItem*) sdsptr);
+	//aggiorno la lista di puntatori ai descrittori dei semaforiChild-Info
+	SemDescriptor* sem_des =(SemDescriptor*)List_insert(&running -> sem_descriptors,running -> sem_descriptors.last, (ListItem*)sds);
 	
 	if(!sem_des){
-		printf("ERRORE - nell'aggiornamento della lista puntatori");
+		printf("ERRORE - nell'aggiornamento della lista puntatori \n");
 		running->syscall_retvalue = DSOS_ELIST_INSERT;
 		return;
 	}
@@ -73,9 +73,10 @@ void internal_semOpen(){
 	sds -> ptr = sdsptr; //descrittore nella struct del descrittore
 
 	//aggiunta ptr del descrittore del sem alla lista dei descrittori
-	SemDescriptorPtr* auxPtr = (SemDescriptorPtr*) List_insert(&aux -> descriptors, aux -> descriptors.last,(ListItem*)(sds -> ptr));
+	SemDescriptorPtr* auxPtr = (SemDescriptorPtr*)List_insert(&aux -> descriptors, aux -> descriptors.last,(ListItem*)(sds -> ptr));
+	
 	if(!auxPtr){
-		printf("ERRORE - inserimento puntatore");
+		printf("ERRORE - inserimento puntatore \n");
 		running->syscall_retvalue = DSOS_ELIST_INSERT;
 		return;
 	}
