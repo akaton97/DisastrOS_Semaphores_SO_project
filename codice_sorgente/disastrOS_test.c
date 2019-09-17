@@ -6,8 +6,8 @@
 
 //numeri da definire meglio durante i test successivi
 //definisco delle macro per la lunghezza del buffer e le iterazioni da fare su di esso
-#define BUFFER_LENGTH 50
-#define ITERATION 10
+#define BUFFER_LENGTH 100
+#define ITERATION 20
 
 //inizializzo il buffer e gli indici di scrittura e lettura dei semafori più i rispettivi semafori
 int buffer[BUFFER_LENGTH];
@@ -98,20 +98,11 @@ void sleeperFunction(void* args){
 void initFunction(void* args) {
 	
   disastrOS_printStatus();
-  printf(" ### Start ###");
+  printf(" ### Start-Init ###\n");
   disastrOS_spawn(sleeperFunction, 0);
-  int fd[10];
-  //stampo lo stato iniziale del buffer ai fini della verifica del test
-  /*printf(" ---- Stato iniziale Buffer ---- ");
-  for(int buf=0; buf < BUFFER_LENGTH; buf++){
-	  printf("%d",buffer[buf]);
-  }
-  printf("\n");
-  */
-  
-  //shared_variable = 1; //valore della variabile condivisa
+  int fd[ITERATION];
 
-  printf("I feel like to spawn 10 nice threads\n");
+  printf("I feel like to spawn %d nice threads\n", ITERATION);
   int alive_children=0;
   
   for (int i=0; i<ITERATION; ++i) {
@@ -135,11 +126,6 @@ void initFunction(void* args) {
     --alive_children;
   }
   
-  //stampo lo stato finale del buffer ai fini della verifica del test con quello iniziale
-  /*printf(" ---- Stato iniziale Buffer ---- ");
-  for(int buf=0; buf < BUFFER_LENGTH; buf++){
-	  printf("%d",buffer[buf]);
-  }*/
   printf("dealloco risorse\n");
   int i;
   for (i = 0; i <ITERATION; ++i)
@@ -147,8 +133,7 @@ void initFunction(void* args) {
 	disastrOS_closeResource(fd[i]);
 	disastrOS_destroyResource(i);
 	disastrOS_printStatus();
-  }
-  
+  } 
   
   printf("STATO FINALE DEL SISTEMA:\n");
   disastrOS_printStatus();
@@ -157,7 +142,7 @@ void initFunction(void* args) {
 	  printf("%d ", buffer[i]);
   }
   printf("\n");
-  printf(" ### shutdown ###");
+  printf(" ### shutdown ###\n");
   disastrOS_shutdown();
 }
 
